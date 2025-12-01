@@ -54,8 +54,8 @@ export async function POST(req: NextRequest) {
             code = await generateFullPageFromPrompt(input);
           }
           await step(controller, "AI draft ready");
-        } catch (e: any) {
-          aiError = e?.message || "AI call failed";
+        } catch (e: unknown) {
+          aiError = e instanceof Error ? e.message : "AI call failed";
           await step(controller, "AI failed — using a sensible default");
           result = {
             rawText: "",
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
           )
         );
         controller.close();
-      } catch (e) {
+      } catch {
         controller.enqueue(
           new TextEncoder().encode(sse({ type: "error", message: "Unexpected error" }))
         );

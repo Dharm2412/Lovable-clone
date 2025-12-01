@@ -20,7 +20,7 @@ export type GeneratedCodeResult = {
 const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
-async function callGemini(parts: Array<any>): Promise<string> {
+async function callGemini(parts: Array<Record<string, unknown>>): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
   const res = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
@@ -34,7 +34,7 @@ async function callGemini(parts: Array<any>): Promise<string> {
   }
   const json = await res.json();
   const text = (json?.candidates?.[0]?.content?.parts || [])
-    .map((p: any) => p.text || "")
+    .map((p: Record<string, unknown>) => (p.text as string) || "")
     .join("");
   return text || "";
 }
@@ -76,7 +76,7 @@ export async function generateLandingSpecFromImageUrl(
     // Best-effort; fall back to prompt-only
   }
 
-  const parts: Array<any> = [{ text: prompt }];
+  const parts: Array<Record<string, unknown>> = [{ text: prompt }];
   if (imageBytes) {
     parts.push({ inlineData: { data: Buffer.from(imageBytes).toString("base64"), mimeType } });
   } else {
@@ -100,7 +100,7 @@ export async function generateLandingSpecFromPrompt(
 export async function generateFullPageFromPrompt(promptText: string): Promise<GeneratedCodeResult> {
   const system = `You generate production-ready web pages. Return a single JSON object with keys: steps (array of short step descriptions), html (a complete HTML document with inline Tailwind classes or minimal semantic HTML), css (optional), js (optional). Do not explain outside of JSON. If css or js are provided, they must be plain text strings.`;
   const rawText = await callGemini([{ text: system }, { text: `User request: ${promptText}` }]);
-  const obj = extractJsonObject(rawText) as any;
+  const obj = extractJsonObject(rawText) as Record<string, unknown>;
   const steps: string[] = Array.isArray(obj.steps) ? obj.steps : [];
   const html: string = String(obj.html || "");
   const css: string | undefined = obj.css ? String(obj.css) : undefined;

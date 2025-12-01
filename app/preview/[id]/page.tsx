@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { generatedPagesStore } from "@/lib/store";
 
-export default function Preview({ params }: { params: { id: string } }) {
-  const page = generatedPagesStore.get(params.id);
+export default async function Preview({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const page = generatedPagesStore.get(id);
   if (!page) return notFound();
 
   if (page.html && page.html.trim().length > 0) {
@@ -20,10 +22,8 @@ export default function Preview({ params }: { params: { id: string } }) {
       <div className="max-w-xl text-center">
         <h1 className="text-2xl font-semibold">Preview not available</h1>
         <p className="mt-2 text-neutral-600">This page has no generated HTML yet. Try regenerating from the home page.</p>
-        <a href="/" className="mt-6 inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white">Go home</a>
+        <Link href="/" className="mt-6 inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white">Go home</Link>
       </div>
     </main>
   );
 }
-
-

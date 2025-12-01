@@ -7,7 +7,7 @@ type StreamEvent =
   | { type: "progress"; message: string }
   | {
     type: "complete";
-    spec: any;
+    spec: unknown;
     previewUrl: string;
     rawText?: string;
     codeHtml?: string;
@@ -20,9 +20,8 @@ type StreamEvent =
 export default function Home() {
   const [input, setInput] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [apiResponse, setApiResponse] = useState<any | null>(null);
-  const [rawText, setRawText] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
+
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [absolutePreview, setAbsolutePreview] = useState<string | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
@@ -40,10 +39,8 @@ export default function Home() {
 
     // Switch to workspace view and reset states
     setShowWorkspace(true);
-    setApiResponse(null);
     setLogs([]);
     setPreviewUrl(null);
-    setRawText(null);
     setCodeHtml(null);
     setCodeCss(null);
     setCodeJs(null);
@@ -96,9 +93,7 @@ export default function Home() {
                 setLogs((prev) => [...prev, evt.message]);
               }
               if (evt.type === "complete") {
-                setApiResponse(evt);
                 if (evt.previewUrl) setPreviewUrl(evt.previewUrl);
-                if (evt.rawText) setRawText(evt.rawText);
                 if (evt.codeHtml) setCodeHtml(evt.codeHtml);
                 if (evt.codeCss) setCodeCss(evt.codeCss);
                 if (evt.codeJs) setCodeJs(evt.codeJs);
@@ -113,13 +108,14 @@ export default function Home() {
           }
         }
       }
-    } catch (err: any) {
-      if (err.name === "AbortError") {
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name === "AbortError") {
         setError("Generation was cancelled");
-      } else if (err.message?.includes("fetch")) {
+      } else if (error.message?.includes("fetch")) {
         setError("Network error: Unable to connect to the server");
       } else {
-        setError(err.message || "An unexpected error occurred");
+        setError(error.message || "An unexpected error occurred");
       }
     } finally {
       setIsGenerating(false);
